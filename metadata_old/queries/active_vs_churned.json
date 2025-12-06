@@ -1,0 +1,6 @@
+{
+  "datasource": "churn_db",
+  "question": "Show me the breakdown of active versus churned subscriptions",
+  "query": "SELECT status, COUNT(*) as count, ROUND(SUM(mrr), 2) as total_revenue FROM subscriptions GROUP BY status",
+  "reasoning": "Groups subscriptions by status to show active vs churned counts and associated revenue"
+}

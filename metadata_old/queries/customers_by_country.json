@@ -1,0 +1,6 @@
+{
+  "datasource": "churn_db",
+  "question": "How many customers do we have in each country?",
+  "query": "SELECT country, COUNT(*) as customer_count FROM customers GROUP BY country ORDER BY customer_count DESC",
+  "reasoning": "Groups customers by country and counts them to show geographic distribution"
+}

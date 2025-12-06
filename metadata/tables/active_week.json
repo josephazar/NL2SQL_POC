@@ -1,0 +1,25 @@
+{
+  "table": "active_week",
+  "description": "Weekly activity tracking for accounts. Aggregates account activity by week. Use for weekly active users (WAU), engagement trends, and time-series activity analysis.",
+  "datasource": "churn_db",
+  "columns": [
+    {
+      "name": "account_id",
+      "description": "Foreign key to account table",
+      "type": "INTEGER",
+      "examples": []
+    },
+    {
+      "name": "start_date",
+      "description": "Week start date",
+      "type": "DATE",
+      "examples": []
+    },
+    {
+      "name": "end_date",
+      "description": "Week end date",
+      "type": "DATE",
+      "examples": []
+    }
+  ]
+}

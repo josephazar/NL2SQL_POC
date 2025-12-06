@@ -1,0 +1,24 @@
+{
+  "table": "metric_name",
+  "description": "Lookup table for metric definitions. Maps metric_name_id to human-readable metric names and descriptions. Essential for interpreting metric data.",
+  "datasource": "churn_db",
+  "columns": [
+    {
+      "name": "metric_name_id",
+      "description": "Unique metric name identifier",
+      "type": "INTEGER",
+      "examples": []
+    },
+    {
+      "name": "metric_name",
+      "description": "Metric name",
+      "type": "TEXT",
+      "examples": [
+        "login_rate",
+        "feature_usage_count",
+        "session_duration",
+        "engagement_score"
+      ]
+    }
+  ]
+}

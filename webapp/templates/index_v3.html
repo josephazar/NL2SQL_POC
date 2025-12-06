@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NL2SQL Churn Analytics POC</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        .sub-query-result {
+            margin: 30px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .sub-query-header {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #5B6FED;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #E8EAFF;
+        }
+        
+        .execution-plan {
+            background: #F0F7FF;
+            border-left: 4px solid #5B6FED;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .execution-plan-title {
+            font-weight: 600;
+            color: #5B6FED;
+            margin-bottom: 8px;
+        }
+        
+        .complex-badge {
+            display: inline-block;
+            background: #FFB84D;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .simple-badge {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 NL2SQL Churn Analytics POC</h1>
+            <p class="subtitle">Ask questions in natural language - Get SQL queries, results, and visualizations!</p>
+        </header>
+
+        <!-- Stats Dashboard -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.total_accounts }}</div>
+                <div class="stat-label">Total Accounts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.active_subscriptions }}</div>
+                <div class="stat-label">Active Subscriptions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.churned_subscriptions }}</div>
+                <div class="stat-label">Churned</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${{ "%.2f"|format(stats.total_mrr) }}</div>
+                <div class="stat-label">Total MRR</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.total_events }}</div>
+                <div class="stat-label">Total Events</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.total_metrics }}</div>
+                <div class="stat-label">Calculated Metrics</div>
+            </div>
+        </div>
+
+        <!-- Query Interface -->
+        <div class="query-section">
+            <h2>Ask a Question</h2>
+            <div class="query-input-container">
+                <textarea 
+                    id="question-input" 
+                    placeholder="e.g., How many customers do I have in total and what is the churn rate per country?"
+                    rows="3"
+                ></textarea>
+                <button id="ask-button" onclick="askQuestion()">Ask Question</button>
+            </div>
+            
+            <p><strong>Example questions:</strong></p>
+            <div class="example-buttons">
+                <button class="example-btn" onclick="setQuestion('What is the churn rate?')">Churn rate?</button>
+                <button class="example-btn" onclick="setQuestion('Show me MRR by product')">MRR by product?</button>
+                <button class="example-btn" onclick="setQuestion('How many events by type?')">Events by type?</button>
+                <button class="example-btn" onclick="setQuestion('Show me subscriptions over time')">Subscriptions over time?</button>
+                <button class="example-btn" onclick="setQuestion('How many customers do I have in total and what is the churn rate per country?')">Complex: Total customers + Churn by country?</button>
+                <button class="example-btn" onclick="setQuestion('Show me MRR by product and also the number of events by type')">Complex: MRR + Events?</button>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Processing your question...</p>
+        </div>
+
+        <!-- Results Container -->
+        <div id="results-container"></div>
+
+        <!-- Schema Section -->
+        <div class="schema-section">
+            <h2>📚 Database Schema ({{ schema|length }} Tables)</h2>
+            {% for table_name, table_info in schema.items() %}
+            <div class="table-schema">
+                <h3>{{ table_name }}</h3>
+                {% for column in table_info.columns %}
+                <p><strong>{{ column.name }}</strong> ({{ column.type }})</p>
+                {% endfor %}
+                <p><strong>Sample ({{ table_info.sample|length }} rows):</strong></p>
+                <pre>{{ table_info.sample[0] if table_info.sample else 'No data' }}</pre>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        function setQuestion(question) {
+            document.getElementById('question-input').value = question;
+        }
+
+        async function askQuestion() {
+            const question = document.getElementById('question-input').value.trim();
+            
+            if (!question) {
+                alert('Please enter a question');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results-container').innerHTML = '';
+
+            try {
+                const response = await fetch('/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question: question })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Query failed');
+                }
+
+                displayResults(data);
+            } catch (error) {
+                document.getElementById('results-container').innerHTML = `
+                    <div class="error-message">
+                        <h3>❌ Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function displayResults(data) {
+            const container = document.getElementById('results-container');
+            let html = '';
+
+            // Show execution plan
+            const badge = data.is_complex ? 
+                '<span class="complex-badge">COMPLEX QUERY</span>' : 
+                '<span class="simple-badge">SIMPLE QUERY</span>';
+            
+            html += `
+                <div class="execution-plan">
+                    <div class="execution-plan-title">
+                        📋 Execution Plan ${badge}
+                    </div>
+                    <p><strong>Original Question:</strong> ${data.original_question}</p>
+                    <p><strong>Strategy:</strong> ${data.execution_plan}</p>
+                    <p><strong>Reasoning:</strong> ${data.reasoning}</p>
+                    <p><strong>Sub-Queries:</strong> ${data.results.length}</p>
+                </div>
+            `;
+
+            // Display each sub-query result
+            data.results.forEach((result, index) => {
+                html += `<div class="sub-query-result">`;
+                
+                // Sub-query header
+                html += `
+                    <div class="sub-query-header">
+                        ${data.is_complex ? `Sub-Query ${index + 1}: ` : ''}${result.sub_question}
+                    </div>
+                `;
+
+                // Visualization
+                if (result.plot) {
+                    html += `
+                        <div class="section">
+                            <h3>📊 Visualization</h3>
+                            <div id="plot-${index}" class="plot-container"></div>
+                        </div>
+                    `;
+                }
+
+                // SQL Query
+                html += `
+                    <div class="section">
+                        <h3>🔍 Generated SQL Query</h3>
+                        <pre class="sql-query">${result.sql}</pre>
+                        ${result.reasoning ? `<p class="reasoning">${result.reasoning}</p>` : ''}
+                    </div>
+                `;
+
+                // Results Table
+                html += `
+                    <div class="section">
+                        <h3>📋 Query Results (${result.results.length} rows)</h3>
+                `;
+
+                if (result.results && result.results.length > 0) {
+                    html += '<div class="results-table-container"><table class="results-table">';
+                    
+                    // Table header
+                    html += '<thead><tr>';
+                    Object.keys(result.results[0]).forEach(key => {
+                        html += `<th>${key}</th>`;
+                    });
+                    html += '</tr></thead>';
+                    
+                    // Table body (limit to 20 rows for display)
+                    html += '<tbody>';
+                    result.results.slice(0, 20).forEach(row => {
+                        html += '<tr>';
+                        Object.values(row).forEach(value => {
+                            html += `<td>${value !== null ? value : 'NULL'}</td>`;
+                        });
+                        html += '</tr>';
+                    });
+                    html += '</tbody></table></div>';
+                    
+                    if (result.results.length > 20) {
+                        html += `<p class="note">Showing first 20 of ${result.results.length} rows</p>`;
+                    }
+                } else {
+                    html += '<p>No results found</p>';
+                }
+
+                html += '</div>'; // Close section
+                html += '</div>'; // Close sub-query-result
+            });
+
+            container.innerHTML = html;
+
+            // Render plots
+            data.results.forEach((result, index) => {
+                if (result.plot) {
+                    Plotly.newPlot(`plot-${index}`, result.plot.data, result.plot.layout, {responsive: true});
+                }
+            });
+
+            // Scroll to results
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Allow Enter key to submit (with Shift+Enter for new line)
+        document.getElementById('question-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                askQuestion();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+{
+  "table": "customers",
+  "description": "Contains customer profile information including demographics and account details. Each customer can have multiple subscriptions.",
+  "datasource": "churn_db",
+  "columns": [
+    {
+      "name": "customer_id",
+      "description": "Unique identifier for each customer",
+      "type": "INTEGER"
+    },
+    {
+      "name": "email",
+      "description": "Customer's email address (unique)",
+      "type": "TEXT"
+    },
+    {
+      "name": "name",
+      "description": "Customer's full name",
+      "type": "TEXT"
+    },
+    {
+      "name": "country",
+      "description": "Customer's country of residence",
+      "type": "TEXT",
+      "examples": ["USA", "UK", "Canada", "Germany", "France", "Australia"]
+    },
+    {
+      "name": "signup_date",
+      "description": "Date when customer first signed up",
+      "type": "DATE"
+    },
+    {
+      "name": "age",
+      "description": "Customer's age in years",
+      "type": "INTEGER"
+    },
+    {
+      "name": "account_type",
+      "description": "Type of customer account",
+      "type": "TEXT",
+      "examples": ["Individual", "Business", "Enterprise"]
+    },
+    {
+      "name": "created_at",
+      "description": "Timestamp when the customer record was created",
+      "type": "TIMESTAMP"
+    }
+  ]
+}

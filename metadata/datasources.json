@@ -1,0 +1,21 @@
+{
+  "datasources": [
+    {
+      "name": "churn_db",
+      "type": "sqlite",
+      "connection_string": "/home/ubuntu/nl2sql_churn_poc/data/churn.db",
+      "description": "Customer churn database with complete churnsim schema (9 tables)",
+      "tables": [
+        "account",
+        "subscription",
+        "event",
+        "event_type",
+        "metric",
+        "metric_name",
+        "active_period",
+        "active_week",
+        "observation"
+      ]
+    }
+  ]
+}

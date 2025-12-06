@@ -1,0 +1,6 @@
+{
+  "datasource": "churn_db",
+  "question": "Show me customers who churned in the last 30 days",
+  "query": "SELECT c.customer_id, c.name, c.email, s.plan_name, s.end_date FROM customers c JOIN subscriptions s ON c.customer_id = s.customer_id WHERE s.status = 'churned' AND s.end_date >= date('now', '-30 days') ORDER BY s.end_date DESC",
+  "reasoning": "Joins customers with churned subscriptions and filters by end_date within last 30 days"
+}

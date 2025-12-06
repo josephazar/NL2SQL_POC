@@ -1,0 +1,6 @@
+{
+  "datasource": "churn_db",
+  "question": "Show me churns by month",
+  "query": "SELECT strftime('%Y-%m', end_date) as month, COUNT(*) as churns FROM subscription WHERE end_date IS NOT NULL GROUP BY month ORDER BY month",
+  "reasoning": "Groups churned subscriptions by end month to show churn trends over time."
+}

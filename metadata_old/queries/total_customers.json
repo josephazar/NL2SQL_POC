@@ -1,0 +1,6 @@
+{
+  "datasource": "churn_db",
+  "question": "How many customers do we have in total?",
+  "query": "SELECT COUNT(*) as total_customers FROM customers",
+  "reasoning": "Simple count of all customer records in the database"
+}

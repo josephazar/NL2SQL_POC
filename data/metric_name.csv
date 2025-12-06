@@ -1,0 +1,11 @@
+metric_name_id,metric_name
+1,login_rate
+2,feature_usage_count
+3,session_duration
+4,support_tickets
+5,user_count
+6,api_calls
+7,content_views
+8,exports
+9,engagement_score
+10,health_score

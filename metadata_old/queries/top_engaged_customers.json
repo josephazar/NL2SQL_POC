@@ -1,0 +1,6 @@
+{
+  "datasource": "churn_db",
+  "question": "Who are our top 10 most engaged customers based on event activity?",
+  "query": "SELECT c.customer_id, c.name, c.email, COUNT(e.event_id) as event_count FROM customers c JOIN events e ON c.customer_id = e.customer_id GROUP BY c.customer_id, c.name, c.email ORDER BY event_count DESC LIMIT 10",
+  "reasoning": "Joins customers with events, counts events per customer, and returns top 10 by activity"
+}

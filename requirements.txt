@@ -1,0 +1,39 @@
+# NL2SQL Churn POC - Python Dependencies
+
+# AI/ML Framework
+semantic-kernel>=1.0.0
+
+# Vector Database
+chromadb>=0.4.0
+
+# Database
+# SQLite is built-in to Python, no package needed
+
+# Optional: MongoDB support (not currently used)
+pymongo>=4.0.0
+
+# Web Framework
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0
+
+# Templates and Forms
+jinja2>=3.1.0
+python-multipart>=0.0.6
+
+# Environment Variables
+python-dotenv>=1.0.0
+
+# File handling
+aiofiles>=23.0.0
+
+# Data Processing (already in sandbox)
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Note: The following are pre-installed in the sandbox:
+# - Python 3.11.0rc1
+# - beautifulsoup4
+# - requests
+# - matplotlib
+# - seaborn
+# - plotly

@@ -1,0 +1,31 @@
+{
+  "table": "metric",
+  "description": "Calculated customer metrics over time (engagement scores, usage metrics, health scores). Time-series data for tracking customer behavior trends. Join with metric_name for metric definitions and account for customer context.",
+  "datasource": "churn_db",
+  "columns": [
+    {
+      "name": "account_id",
+      "description": "Foreign key to account table",
+      "type": "INTEGER",
+      "examples": []
+    },
+    {
+      "name": "metric_time",
+      "description": "Timestamp when metric was calculated",
+      "type": "TIMESTAMP",
+      "examples": []
+    },
+    {
+      "name": "metric_name_id",
+      "description": "Foreign key to metric_name table",
+      "type": "INTEGER",
+      "examples": []
+    },
+    {
+      "name": "metric_value",
+      "description": "Calculated metric value",
+      "type": "REAL",
+      "examples": []
+    }
+  ]
+}

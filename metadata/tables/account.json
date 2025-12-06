@@ -1,0 +1,42 @@
+{
+  "table": "account",
+  "description": "Customer account information including demographics, country, and acquisition channel. Use this table to analyze customer distribution by country, age demographics, and acquisition channels. Essential for geographic analysis and churn rate calculations by country.",
+  "datasource": "churn_db",
+  "columns": [
+    {
+      "name": "id",
+      "description": "Unique account identifier",
+      "type": "INTEGER",
+      "examples": []
+    },
+    {
+      "name": "channel",
+      "description": "Acquisition channel (organic, paid_search, social_media, referral, direct, email)",
+      "type": "TEXT",
+      "examples": [
+        "organic",
+        "paid_search",
+        "referral"
+      ]
+    },
+    {
+      "name": "date_of_birth",
+      "description": "Customer date of birth",
+      "type": "DATE",
+      "examples": []
+    },
+    {
+      "name": "country",
+      "description": "Customer country (geographic location). Use for geographic segmentation, churn rate by country, revenue by region, and customer distribution analysis.",
+      "type": "TEXT",
+      "examples": [
+        "USA",
+        "UK",
+        "Canada",
+        "Germany",
+        "France",
+        "Australia"
+      ]
+    }
+  ]
+}

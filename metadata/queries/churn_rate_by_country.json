@@ -1,0 +1,6 @@
+{
+  "datasource": "churn_db",
+  "question": "What is the churn rate by country?",
+  "query": "SELECT a.country, COUNT(CASE WHEN o.is_churn = 1 THEN 1 END) AS churned_accounts, COUNT(o.account_id) AS total_observations, ROUND(COUNT(CASE WHEN o.is_churn = 1 THEN 1 END) * 100.0 / COUNT(o.account_id), 2) AS churn_rate FROM account a JOIN observation o ON a.id = o.account_id GROUP BY a.country ORDER BY churn_rate DESC LIMIT 100",
+  "reasoning": "To calculate churn rate by country, join the account table (which has country information) with the observation table (which has is_churn flag). Count churned accounts where is_churn=1 and divide by total observations per country."
+}

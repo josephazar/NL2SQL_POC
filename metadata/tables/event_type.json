@@ -1,0 +1,25 @@
+{
+  "table": "event_type",
+  "description": "Lookup table for event type definitions. Maps event_type_id to human-readable event names (login, logout, feature_usage, support_ticket, payment, etc.). Essential for interpreting event data.",
+  "datasource": "churn_db",
+  "columns": [
+    {
+      "name": "event_type_id",
+      "description": "Unique event type identifier",
+      "type": "INTEGER",
+      "examples": []
+    },
+    {
+      "name": "event_type_name",
+      "description": "Event type name",
+      "type": "TEXT",
+      "examples": [
+        "login",
+        "logout",
+        "feature_usage",
+        "support_ticket",
+        "settings_change"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "table": "subscriptions",
+  "description": "Contains subscription information including plan details, pricing, and churn status. Links customers to their subscription plans and tracks active vs churned subscriptions.",
+  "datasource": "churn_db",
+  "columns": [
+    {
+      "name": "subscription_id",
+      "description": "Unique identifier for each subscription",
+      "type": "INTEGER"
+    },
+    {
+      "name": "customer_id",
+      "description": "Foreign key reference to customers table",
+      "type": "INTEGER"
+    },
+    {
+      "name": "plan_id",
+      "description": "Identifier for the subscription plan",
+      "type": "INTEGER"
+    },
+    {
+      "name": "plan_name",
+      "description": "Name of the subscription plan",
+      "type": "TEXT",
+      "examples": ["Basic", "Standard", "Premium", "Enterprise"]
+    },
+    {
+      "name": "mrr",
+      "description": "Monthly recurring revenue for this subscription in USD",
+      "type": "REAL"
+    },
+    {
+      "name": "start_date",
+      "description": "Date when the subscription started",
+      "type": "DATE"
+    },
+    {
+      "name": "end_date",
+      "description": "Date when the subscription ended (NULL if still active)",
+      "type": "DATE"
+    },
+    {
+      "name": "status",
+      "description": "Current status of the subscription",
+      "type": "TEXT",
+      "examples": ["active", "churned"]
+    },
+    {
+      "name": "billing_period",
+      "description": "Billing frequency for the subscription",
+      "type": "TEXT",
+      "examples": ["monthly", "annual"]
+    },
+    {
+      "name": "created_at",
+      "description": "Timestamp when the subscription record was created",
+      "type": "TIMESTAMP"
+    }
+  ]
+}

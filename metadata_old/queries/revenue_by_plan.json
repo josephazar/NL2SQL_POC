@@ -1,0 +1,6 @@
+{
+  "datasource": "churn_db",
+  "question": "What is the total monthly revenue by subscription plan?",
+  "query": "SELECT plan_name, COUNT(*) as subscriber_count, ROUND(SUM(mrr), 2) as total_mrr FROM subscriptions WHERE status = 'active' GROUP BY plan_name ORDER BY total_mrr DESC",
+  "reasoning": "Aggregates active subscriptions by plan and calculates total MRR for each plan"
+}

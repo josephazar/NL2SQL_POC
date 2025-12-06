@@ -1,0 +1,6 @@
+{
+  "datasource": "churn_db",
+  "question": "How many churn observations do we have?",
+  "query": "SELECT is_churn, COUNT(*) as observation_count FROM observation GROUP BY is_churn",
+  "reasoning": "Counts ML training observations grouped by churn status."
+}

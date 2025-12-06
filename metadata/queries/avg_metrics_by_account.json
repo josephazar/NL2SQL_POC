@@ -1,0 +1,6 @@
+{
+  "datasource": "churn_db",
+  "question": "What are the average metric values by metric type?",
+  "query": "SELECT mn.metric_name, ROUND(AVG(m.metric_value), 2) as avg_value, COUNT(*) as measurement_count FROM metric m JOIN metric_name mn ON m.metric_name_id = mn.metric_name_id GROUP BY mn.metric_name ORDER BY avg_value DESC",
+  "reasoning": "Calculates average values for each metric type using metric and metric_name tables."
+}

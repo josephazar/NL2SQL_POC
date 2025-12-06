@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NL2SQL Churn Analytics POC</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 NL2SQL Churn Analytics POC</h1>
+            <p class="subtitle">Ask questions in natural language - Get SQL queries, results, and visualizations!</p>
+        </header>
+
+        <!-- Database Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.total_accounts }}</div>
+                <div class="stat-label">Total Accounts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.active_subscriptions }}</div>
+                <div class="stat-label">Active Subscriptions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.churned_subscriptions }}</div>
+                <div class="stat-label">Churned</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${{ stats.total_mrr }}</div>
+                <div class="stat-label">Total MRR</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.total_events }}</div>
+                <div class="stat-label">Total Events</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.total_metrics }}</div>
+                <div class="stat-label">Calculated Metrics</div>
+            </div>
+        </div>
+
+        <!-- Query Interface -->
+        <div class="query-section">
+            <h2>Ask a Question</h2>
+            <div class="query-input-container">
+                <textarea 
+                    id="question-input" 
+                    placeholder="e.g., What is the churn rate by country?"
+                    rows="3"
+                ></textarea>
+                <button id="ask-button" onclick="askQuestion()">Ask Question</button>
+            </div>
+
+            <!-- Example Questions -->
+            <div class="examples">
+                <p><strong>Example questions:</strong></p>
+                <div class="example-buttons">
+                    <button class="example-btn" onclick="setQuestion('What is the churn rate?')">Churn rate?</button>
+                    <button class="example-btn" onclick="setQuestion('Show me MRR by product')">MRR by product?</button>
+                    <button class="example-btn" onclick="setQuestion('How many events by type?')">Events by type?</button>
+                    <button class="example-btn" onclick="setQuestion('Show me subscriptions over time')">Subscriptions over time?</button>
+                    <button class="example-btn" onclick="setQuestion('What is the churn rate by channel?')">Churn by channel?</button>
+                    <button class="example-btn" onclick="setQuestion('Show me churns by month')">Churns by month?</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Generating SQL query and analyzing data...</p>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section" style="display: none;">
+            <!-- Visualization -->
+            <div id="visualization-container" style="display: none;">
+                <h2>📊 Visualization</h2>
+                <div id="plot-container"></div>
+            </div>
+
+            <!-- SQL Query -->
+            <div class="result-card">
+                <h2>🔍 Generated SQL Query</h2>
+                <pre id="sql-query" class="code-block"></pre>
+                <p id="reasoning" class="reasoning"></p>
+            </div>
+
+            <!-- Query Results -->
+            <div class="result-card">
+                <h2>📋 Query Results (<span id="row-count">0</span> rows)</h2>
+                <div id="results-table-container"></div>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-section" class="error-message" style="display: none;">
+            <h3>❌ Error</h3>
+            <p id="error-message"></p>
+        </div>
+
+        <!-- Database Schema -->
+        <div class="schema-section">
+            <h2>📚 Database Schema (9 Tables)</h2>
+            <div class="schema-grid">
+                {% for table_name, table_info in schema.items() %}
+                <div class="schema-card">
+                    <h3>{{ table_name }}</h3>
+                    <div class="columns-list">
+                        {% for column in table_info.columns %}
+                        <div class="column-item">
+                            <strong>{{ column.name }}</strong> ({{ column.type }})
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="sample-data">
+                        <strong>Sample ({{ table_info.sample_count }} rows):</strong>
+                        {% if table_info.sample_data %}
+                        <pre>{{ table_info.sample_data[0] if table_info.sample_data else 'No data' }}</pre>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setQuestion(question) {
+            document.getElementById('question-input').value = question;
+        }
+
+        async function askQuestion() {
+            const question = document.getElementById('question-input').value.trim();
+            
+            if (!question) {
+                alert('Please enter a question');
+                return;
+            }
+
+            // Show loading, hide results and errors
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results-section').style.display = 'none';
+            document.getElementById('error-section').style.display = 'none';
+            document.getElementById('visualization-container').style.display = 'none';
+
+            try {
+                const response = await fetch('/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question: question })
+                });
+
+                const data = await response.json();
+
+                // Hide loading
+                document.getElementById('loading').style.display = 'none';
+
+                if (data.success) {
+                    // Show results
+                    document.getElementById('results-section').style.display = 'block';
+                    
+                    // Display SQL query
+                    document.getElementById('sql-query').textContent = data.sql;
+                    document.getElementById('reasoning').textContent = data.reasoning || '';
+                    
+                    // Display row count
+                    document.getElementById('row-count').textContent = data.row_count;
+                    
+                    // Display results table
+                    displayResults(data.results);
+                    
+                    // Display visualization if available
+                    if (data.plot) {
+                        document.getElementById('visualization-container').style.display = 'block';
+                        Plotly.newPlot('plot-container', data.plot.data, data.plot.layout, {responsive: true});
+                    }
+                } else {
+                    // Show error
+                    document.getElementById('error-section').style.display = 'block';
+                    document.getElementById('error-message').textContent = data.error;
+                }
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error-section').style.display = 'block';
+                document.getElementById('error-message').textContent = 'Failed to process query: ' + error.message;
+            }
+        }
+
+        function displayResults(results) {
+            const container = document.getElementById('results-table-container');
+            
+            if (!results || results.length === 0) {
+                container.innerHTML = '<p>No results found.</p>';
+                return;
+            }
+
+            // Create table
+            const table = document.createElement('table');
+            table.className = 'results-table';
+            
+            // Create header
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            Object.keys(results[0]).forEach(key => {
+                const th = document.createElement('th');
+                th.textContent = key;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+            
+            // Create body
+            const tbody = document.createElement('tbody');
+            results.forEach(row => {
+                const tr = document.createElement('tr');
+                Object.values(row).forEach(value => {
+                    const td = document.createElement('td');
+                    td.textContent = value !== null ? value : 'NULL';
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            
+            container.innerHTML = '';
+            container.appendChild(table);
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('question-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                askQuestion();
+            }
+        });
+    </script>
+</body>
+</html>

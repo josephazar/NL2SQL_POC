@@ -1,0 +1,6 @@
+{
+  "datasource": "churn_db",
+  "question": "What is the churn rate by acquisition channel?",
+  "query": "SELECT a.channel, ROUND(CAST(SUM(CASE WHEN s.end_date IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / COUNT(*) * 100, 2) as churn_rate FROM account a JOIN subscription s ON a.id = s.account_id GROUP BY a.channel ORDER BY churn_rate DESC",
+  "reasoning": "Calculates churn rate for each acquisition channel by joining accounts and subscriptions."
+}

@@ -1,0 +1,25 @@
+{
+  "table": "observation",
+  "description": "ML training observations with churn labels. Contains historical snapshots of account status with churn indicators. Join with account table to calculate churn rates by demographics, country, or channel. Essential for all churn analysis queries.",
+  "datasource": "churn_db",
+  "columns": [
+    {
+      "name": "account_id",
+      "description": "Foreign key to account table",
+      "type": "INTEGER",
+      "examples": []
+    },
+    {
+      "name": "observation_date",
+      "description": "Date of observation",
+      "type": "DATE",
+      "examples": []
+    },
+    {
+      "name": "is_churn",
+      "description": "Churn indicator flag (1=churned, 0=active). Use COUNT(CASE WHEN is_churn = 1 THEN 1 END) to count churned accounts. Essential for calculating churn rates.",
+      "type": "BOOLEAN",
+      "examples": []
+    }
+  ]
+}

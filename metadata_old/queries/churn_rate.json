@@ -1,0 +1,6 @@
+{
+  "datasource": "churn_db",
+  "question": "What is our current churn rate?",
+  "query": "SELECT ROUND(CAST(SUM(CASE WHEN status = 'churned' THEN 1 ELSE 0 END) AS FLOAT) / COUNT(*) * 100, 2) as churn_rate_percent FROM subscriptions",
+  "reasoning": "Calculates the percentage of churned subscriptions out of total subscriptions"
+}

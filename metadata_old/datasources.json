@@ -1,0 +1,11 @@
+{
+  "id": "churn_db",
+  "type": "sqlite",
+  "description": "Customer churn database containing customer profiles, subscription data, and engagement events for churn prediction and analysis",
+  "database_path": "/home/ubuntu/nl2sql_churn_poc/data/churn.db",
+  "metadata": {
+    "created_date": "2024-12-06",
+    "tables": ["customers", "subscriptions", "events"],
+    "primary_use_case": "churn_analysis"
+  }
+}

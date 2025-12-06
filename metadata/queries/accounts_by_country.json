@@ -1,0 +1,6 @@
+{
+  "datasource": "churn_db",
+  "question": "How many accounts do we have in each country?",
+  "query": "SELECT country, COUNT(*) as account_count FROM account GROUP BY country ORDER BY account_count DESC",
+  "reasoning": "Groups accounts by country and counts them."
+}

@@ -1,0 +1,37 @@
+{
+  "table": "event",
+  "description": "Customer behavioral events and interactions (logins, feature usage, support tickets, etc.). Use for engagement analysis, feature adoption, user activity patterns, and behavioral churn indicators. Join with event_type for event names and account for customer context.",
+  "datasource": "churn_db",
+  "columns": [
+    {
+      "name": "account_id",
+      "description": "Foreign key to account table",
+      "type": "INTEGER",
+      "examples": []
+    },
+    {
+      "name": "event_time",
+      "description": "Timestamp when event occurred",
+      "type": "TIMESTAMP",
+      "examples": []
+    },
+    {
+      "name": "event_type_id",
+      "description": "Foreign key to event_type table",
+      "type": "INTEGER",
+      "examples": []
+    },
+    {
+      "name": "user_id",
+      "description": "User ID for multi-user accounts (nullable)",
+      "type": "INTEGER",
+      "examples": []
+    },
+    {
+      "name": "event_value",
+      "description": "Numeric value associated with event (nullable)",
+      "type": "REAL",
+      "examples": []
+    }
+  ]
+}

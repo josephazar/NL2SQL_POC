@@ -1,0 +1,6 @@
+{
+  "datasource": "churn_db",
+  "question": "What is the average subscription duration for churned customers?",
+  "query": "SELECT ROUND(AVG(julianday(end_date) - julianday(start_date)), 2) as avg_days FROM subscriptions WHERE status = 'churned'",
+  "reasoning": "Calculates average number of days between start and end dates for churned subscriptions"
+}

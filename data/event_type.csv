@@ -1,0 +1,13 @@
+event_type_id,event_type_name
+1,login
+2,logout
+3,feature_usage
+4,support_ticket
+5,settings_change
+6,invite
+7,payment
+8,upgrade
+9,downgrade
+10,content_view
+11,export
+12,api_call

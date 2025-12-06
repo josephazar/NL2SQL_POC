@@ -1,0 +1,75 @@
+{
+  "table": "subscription",
+  "description": "Customer subscription details including product, pricing, start/end dates, and MRR. Use this table for revenue analysis, product performance, subscription lifecycle, and active vs churned subscription counts. Join with account for customer demographics or observation for churn analysis.",
+  "datasource": "churn_db",
+  "columns": [
+    {
+      "name": "account_id",
+      "description": "Foreign key to account table",
+      "type": "INTEGER",
+      "examples": []
+    },
+    {
+      "name": "product",
+      "description": "Subscription product/plan name",
+      "type": "TEXT",
+      "examples": [
+        "Basic",
+        "Standard",
+        "Premium",
+        "Enterprise"
+      ]
+    },
+    {
+      "name": "start_date",
+      "description": "Subscription start date",
+      "type": "DATE",
+      "examples": []
+    },
+    {
+      "name": "end_date",
+      "description": "Subscription end date (NULL if active)",
+      "type": "DATE",
+      "examples": []
+    },
+    {
+      "name": "mrr",
+      "description": "Monthly recurring revenue",
+      "type": "REAL",
+      "examples": []
+    },
+    {
+      "name": "quantity",
+      "description": "Number of units/seats",
+      "type": "REAL",
+      "examples": []
+    },
+    {
+      "name": "units",
+      "description": "Unit type (seats, users, licenses)",
+      "type": "TEXT",
+      "examples": [
+        "seats",
+        "users",
+        "licenses"
+      ]
+    },
+    {
+      "name": "bill_period_months",
+      "description": "Billing period in months",
+      "type": "INTEGER",
+      "examples": [
+        1,
+        3,
+        6,
+        12
+      ]
+    },
+    {
+      "name": "discount",
+      "description": "Discount percentage applied",
+      "type": "REAL",
+      "examples": []
+    }
+  ]
+}

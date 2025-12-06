@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NL2SQL Churn Analytics POC</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        .sub-query-result {
+            margin: 30px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .sub-query-header {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #5B6FED;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #E8EAFF;
+        }
+        
+        .execution-plan {
+            background: #F0F7FF;
+            border-left: 4px solid #5B6FED;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .execution-plan-title {
+            font-weight: 600;
+            color: #5B6FED;
+            margin-bottom: 8px;
+        }
+        
+        .complex-badge {
+            display: inline-block;
+            background: #FFB84D;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .simple-badge {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 NL2SQL Churn Analytics POC</h1>
+            <p class="subtitle">Ask questions in natural language - Get SQL queries, results, and visualizations!</p>
+        </header>
+
+        <!-- Stats Dashboard -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.total_accounts }}</div>
+                <div class="stat-label">Total Accounts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.active_subscriptions }}</div>
+                <div class="stat-label">Active Subscriptions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.churned_subscriptions }}</div>
+                <div class="stat-label">Churned</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${{ "%.2f"|format(stats.total_mrr) }}</div>
+                <div class="stat-label">Total MRR</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.total_events }}</div>
+                <div class="stat-label">Total Events</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.total_metrics }}</div>
+                <div class="stat-label">Calculated Metrics</div>
+            </div>
+        </div>
+
+        <!-- Query Interface -->
+        <div class="query-section">
+            <h2>Ask a Question</h2>
+            <div class="query-input-container">
+                <textarea 
+                    id="question-input"
+                    name="question"
+                    placeholder="e.g., How many customers do I have in total and what is the churn rate per country?"
+                    rows="3"
+                    aria-label="Enter your question"
+                ></textarea>
+                <button id="ask-button" type="button" onclick="askQuestion()" aria-label="Submit question">Ask Question</button>
+            </div>
+            
+            <p><strong>Example questions:</strong></p>
+            <div class="example-buttons">
+                <button class="example-btn" type="button" onclick="setQuestion('What is the churn rate?')">Churn rate?</button>
+                <button class="example-btn" type="button" onclick="setQuestion('Show me MRR by product')">MRR by product?</button>
+                <button class="example-btn" type="button" onclick="setQuestion('How many events by type?')">Events by type?</button>
+                <button class="example-btn" type="button" onclick="setQuestion('Show me subscriptions over time')">Subscriptions over time?</button>
+                <button class="example-btn" type="button" onclick="setQuestion('How many customers do I have in total and what is the churn rate per country?')">Complex: Total customers + Churn by country?</button>
+                <button class="example-btn" type="button" onclick="setQuestion('Show me MRR by product and also the number of events by type')">Complex: MRR + Events?</button>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Processing your question...</p>
+        </div>
+
+        <!-- Results Container -->
+        <div id="results-container"></div>
+
+        <!-- Schema Section -->
+        <div class="schema-section">
+            <h2>📚 Database Schema ({{ schema|length }} Tables)</h2>
+            {% for table_name, table_info in schema.items() %}
+            <div class="table-schema">
+                <h3>{{ table_name }}</h3>
+                {% for column in table_info.columns %}
+                <p><strong>{{ column.name }}</strong> ({{ column.type }})</p>
+                {% endfor %}
+                <p><strong>Sample ({{ table_info.sample|length }} rows):</strong></p>
+                <pre>{{ table_info.sample[0] if table_info.sample else 'No data' }}</pre>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script src="/static/script_generic.js"></script>
+</body>
+</html>

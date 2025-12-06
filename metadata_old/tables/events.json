@@ -1,0 +1,43 @@
+{
+  "table": "events",
+  "description": "Contains customer activity and engagement events. Tracks various user actions and behaviors that can be used to predict churn. Higher event frequency typically indicates better engagement.",
+  "datasource": "churn_db",
+  "columns": [
+    {
+      "name": "event_id",
+      "description": "Unique identifier for each event",
+      "type": "INTEGER"
+    },
+    {
+      "name": "customer_id",
+      "description": "Foreign key reference to customers table",
+      "type": "INTEGER"
+    },
+    {
+      "name": "subscription_id",
+      "description": "Foreign key reference to subscriptions table",
+      "type": "INTEGER"
+    },
+    {
+      "name": "event_type",
+      "description": "Type of event or user action performed",
+      "type": "TEXT",
+      "examples": ["login", "feature_usage", "support_ticket", "download", "upload", "share", "invite", "payment", "profile_update", "settings_change", "export_data", "api_call"]
+    },
+    {
+      "name": "event_date",
+      "description": "Date when the event occurred",
+      "type": "DATE"
+    },
+    {
+      "name": "event_value",
+      "description": "Numeric value associated with the event (e.g., transaction amount, usage metric)",
+      "type": "REAL"
+    },
+    {
+      "name": "created_at",
+      "description": "Timestamp when the event record was created",
+      "type": "TIMESTAMP"
+    }
+  ]
+}

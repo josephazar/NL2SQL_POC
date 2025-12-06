@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NL2SQL Churn Analytics POC</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🎯 NL2SQL Churn Analytics POC</h1>
+            <p>Ask questions in natural language - Get SQL queries, results, and visualizations!</p>
+            <p class="subtitle">✨ Now with Map-Reduce, Intelligent Visualization & Result Synthesis</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Database Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.total_accounts }}</div>
+                <div class="stat-label">Total Accounts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.active_subscriptions }}</div>
+                <div class="stat-label">Active Subscriptions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.churned_subscriptions }}</div>
+                <div class="stat-label">Churned</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${{ "{:,.2f}".format(stats.total_mrr) }}</div>
+                <div class="stat-label">Total MRR</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.total_events }}</div>
+                <div class="stat-label">Total Events</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.total_metrics }}</div>
+                <div class="stat-label">Calculated Metrics</div>
+            </div>
+        </div>
+
+        <!-- Query Interface -->
+        <div class="query-section">
+            <h2>Ask a Question</h2>
+            <div class="query-input-container">
+                <textarea 
+                    id="question-input" 
+                    name="question"
+                    placeholder="e.g., How many customers do I have in total and what is the churn rate per country?"
+                    rows="3"
+                    aria-label="Enter your question"
+                ></textarea>
+                <button id="ask-button" type="button" onclick="askQuestion()">Ask Question</button>
+            </div>
+            
+            <div class="examples">
+                <strong>Example questions:</strong>
+                <button type="button" class="example-btn" onclick="setQuestion('What is the churn rate?')">Churn rate?</button>
+                <button type="button" class="example-btn" onclick="setQuestion('Show me MRR by product')">MRR by product?</button>
+                <button type="button" class="example-btn" onclick="setQuestion('How many events by type?')">Events by type?</button>
+                <button type="button" class="example-btn" onclick="setQuestion('Show me subscriptions over time')">Subscriptions over time?</button>
+                <button type="button" class="example-btn" onclick="setQuestion('How many customers do I have in total and what is the churn rate per country?')">Complex: Total customers + Churn by country?</button>
+                <button type="button" class="example-btn" onclick="setQuestion('What is the total MRR and how many events by type?')">Complex: MRR + Events?</button>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" style="display:none;">
+            <div class="loading-spinner"></div>
+            <p>Processing your question...</p>
+        </div>
+
+        <!-- Results Container -->
+        <div id="results-container"></div>
+
+        <!-- Database Schema -->
+        <div class="schema-section">
+            <h2>📚 Database Schema ({{ schema|length }} Tables)</h2>
+            {% for table in schema %}
+            <div class="table-card">
+                <h3>{{ table.name }}</h3>
+                <div class="columns">
+                    {% for col in table.columns %}
+                    <span class="column-badge"><strong>{{ col.name }}</strong> ({{ col.type }})</span>
+                    {% endfor %}
+                </div>
+                <div class="sample-data">
+                    <strong>Sample ({{ table.sample|length }} rows):</strong>
+                    {% if table.sample|length > 0 %}
+                    <table>
+                        <thead>
+                            <tr>
+                                {% for col in table.columns %}
+                                <th>{{ col.name }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in table.sample[:3] %}
+                            <tr>
+                                {% for col in table.columns %}
+                                <td>{{ row[col.name] }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p>No data</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <script src="/static/script_mapreduce.js"></script>
+</body>
+</html>
