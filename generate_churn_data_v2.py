@@ -389,7 +389,7 @@ if __name__ == '__main__':
     print("Starting enhanced churn data simulation...")
     print("="*50)
     
-    db_path = '/home/ubuntu/nl2sql_churn_poc/data/churn.db'
+    db_path = 'data/churn.db'
     create_database(db_path)
     
     print("\n" + "="*50)

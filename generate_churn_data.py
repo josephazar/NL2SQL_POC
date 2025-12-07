@@ -198,7 +198,7 @@ def main():
     events_df = generate_events(subscriptions_df, NUM_EVENTS)
     
     # Create database
-    db_path = '/home/ubuntu/nl2sql_churn_poc/data/churn.db'
+    db_path = 'data/churn.db'
     conn = create_database(db_path)
     
     # Insert data
@@ -230,12 +230,12 @@ def main():
     
     # Also save as CSV for reference
     print("\nSaving CSV files...")
-    customers_df.to_csv('/home/ubuntu/nl2sql_churn_poc/data/customers.csv', index=False)
-    subscriptions_df.to_csv('/home/ubuntu/nl2sql_churn_poc/data/subscriptions.csv', index=False)
-    events_df.to_csv('/home/ubuntu/nl2sql_churn_poc/data/events.csv', index=False)
+    customers_df.to_csv('data/customers.csv', index=False)
+    subscriptions_df.to_csv('data/subscriptions.csv', index=False)
+    events_df.to_csv('data/events.csv', index=False)
     
     print(f"\n✓ Database created successfully at {db_path}")
-    print("✓ CSV files saved in /home/ubuntu/nl2sql_churn_poc/data/")
+    print("✓ CSV files saved in data/")
 
 if __name__ == '__main__':
     main()

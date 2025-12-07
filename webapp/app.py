@@ -54,7 +54,39 @@ class QueryRequest(BaseModel):
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     """Render the main page"""
-    return templates.TemplateResponse("index_mapreduce.html", {"request": request})
+    try:
+        stats = db.get_stats()
+    except Exception as e:
+        logger.error(f"Error getting stats: {e}")
+        stats = {
+            'total_accounts': 0,
+            'active_subscriptions': 0,
+            'churned_subscriptions': 0,
+            'total_mrr': 0,
+            'total_events': 0,
+            'total_metrics': 0
+        }
+
+    try:
+        schema_dict = db.get_schema()
+        # Transform schema dict to list format expected by template
+        schema = [
+            {
+                'name': table_name,
+                'columns': table_data['columns'],
+                'sample': table_data['sample_data']
+            }
+            for table_name, table_data in schema_dict.items()
+        ]
+    except Exception as e:
+        logger.error(f"Error getting schema: {e}")
+        schema = []
+
+    return templates.TemplateResponse("index_mapreduce.html", {
+        "request": request,
+        "stats": stats,
+        "schema": schema
+    })
 
 @app.get("/health")
 async def health():
@@ -89,8 +121,9 @@ async def query(request: QueryRequest):
         result = await agent.process_question(request.question)
         return JSONResponse(content=result)
     except Exception as e:
-        logger.error(f"Error processing query: {e}")
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+        import traceback
+        logger.error(f"Error processing query: {e}\n{traceback.format_exc()}")
+        return JSONResponse(content={"error": str(e), "type": "error", "question": request.question})
 
 if __name__ == "__main__":
     import uvicorn

@@ -8,17 +8,19 @@ function setQuestion(question) {
 async function askQuestion() {
     const questionInput = document.getElementById('question-input');
     const question = questionInput.value.trim();
-    
+
     if (!question) {
         alert('Please enter a question');
         return;
     }
-    
+
     // Show loading
     document.getElementById('loading').style.display = 'block';
     document.getElementById('results-container').innerHTML = '';
-    
+
     try {
+        console.log('Sending question:', question);
+
         const response = await fetch('/query', {
             method: 'POST',
             headers: {
@@ -26,27 +28,47 @@ async function askQuestion() {
             },
             body: JSON.stringify({ question })
         });
-        
+
+        console.log('Response status:', response.status, response.statusText);
+
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Response error:', errorText);
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
+        // Debug: log the response
+        console.log('Response data:', data);
+        console.log('Response type:', typeof data, 'Type field:', data.type);
+
         // Hide loading
         document.getElementById('loading').style.display = 'none';
-        
-        // Display results based on query type
-        if (data.query_type === 'simple') {
-            displaySimpleResult(data);
-        } else if (data.query_type === 'complex') {
-            displayComplexResult(data);
-        } else {
-            displayError('Unknown query type: ' + data.query_type);
+
+        // Check if data exists and has type
+        if (!data) {
+            displayError('No data received from server');
+            return;
         }
-        
+
+        // Display results based on query type
+        if (data.type === 'simple') {
+            console.log('Displaying simple result');
+            displaySimpleResult(data);
+        } else if (data.type === 'complex') {
+            console.log('Displaying complex result');
+            displayComplexResult(data);
+        } else if (data.type === 'error') {
+            console.log('Displaying error');
+            displayError(data.error || 'An error occurred');
+        } else {
+            console.error('Unknown type:', data.type, 'Full data:', data);
+            displayError('Unknown query type: ' + data.type + ' (check console for details)');
+        }
+
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error in askQuestion:', error);
         document.getElementById('loading').style.display = 'none';
         displayError(error.message);
     }
@@ -54,31 +76,57 @@ async function askQuestion() {
 
 function displaySimpleResult(data) {
     const container = document.getElementById('results-container');
-    
+
+    const vizAssessment = data.visualization_assessment || {};
+    const shouldVisualize = vizAssessment.should_visualize || false;
+    const vizReason = vizAssessment.reasoning || vizAssessment.reason || 'No reason provided';
+
     let html = `
         <div class="result-card">
             <div class="result-header">
                 <h2>📊 Query Result</h2>
                 <span class="badge badge-simple">SIMPLE QUERY</span>
             </div>
-            
+
             <div class="result-content">
                 <p><strong>Question:</strong> ${escapeHtml(data.question)}</p>
     `;
-    
+
+    // Summary Section (if available)
+    if (data.summary) {
+        html += `
+            <div class="summary-section">
+                <h3>✨ Summary</h3>
+                <p class="summary-text">${escapeHtml(data.summary)}</p>
+            </div>
+        `;
+    }
+
+    // Key Insights (if available)
+    if (data.key_insights && data.key_insights.length > 0) {
+        html += `
+            <div class="insights-section">
+                <h3>💡 Key Insights</h3>
+                <ul class="insights-list">
+                    ${data.key_insights.map(insight => `<li>${escapeHtml(insight)}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+    }
+
     // Visualization (if applicable)
-    if (data.should_visualize && data.plot) {
+    if (shouldVisualize && data.plot) {
         html += `
             <div class="visualization-section">
                 <h3>📊 Visualization</h3>
-                <p class="viz-reason"><em>${escapeHtml(data.viz_reason)}</em></p>
+                <p class="viz-reason"><em>${escapeHtml(vizReason)}</em></p>
                 <div id="plot-simple"></div>
             </div>
         `;
-    } else if (!data.should_visualize) {
+    } else if (!shouldVisualize) {
         html += `
             <div class="no-viz-section">
-                <p class="viz-reason">💡 <strong>No visualization:</strong> ${escapeHtml(data.viz_reason)}</p>
+                <p class="viz-reason">💡 <strong>No visualization:</strong> ${escapeHtml(vizReason)}</p>
             </div>
         `;
     }
@@ -110,39 +158,45 @@ function displaySimpleResult(data) {
     `;
     
     container.innerHTML = html;
-    
+
     // Render plot if applicable
-    if (data.should_visualize && data.plot) {
+    if (shouldVisualize && data.plot) {
         Plotly.newPlot('plot-simple', data.plot.data, data.plot.layout, {responsive: true});
     }
 }
 
 function displayComplexResult(data) {
     const container = document.getElementById('results-container');
-    
+
+    const insights = data.key_insights || data.insights || [];
+    const originalQuestion = data.original_question || data.question;
+
     let html = `
         <div class="result-card">
             <div class="result-header">
                 <h2>📊 Query Result</h2>
                 <span class="badge badge-complex">COMPLEX QUERY</span>
             </div>
-            
+
             <div class="result-content">
-                <p><strong>Original Question:</strong> ${escapeHtml(data.original_question)}</p>
-                
+                <p><strong>Original Question:</strong> ${escapeHtml(originalQuestion)}</p>
+
                 <!-- Unified Answer Section -->
                 <div class="unified-answer-section">
                     <h3>✨ Unified Answer</h3>
-                    <p class="unified-answer">${escapeHtml(data.unified_answer)}</p>
+                    <p class="unified-answer">${escapeHtml(data.unified_answer || 'No unified answer available')}</p>
                 </div>
-                
+
                 <!-- Key Insights Section -->
+                ${insights.length > 0 ? `
                 <div class="insights-section">
                     <h3>💡 Key Insights</h3>
                     <ul class="insights-list">
-                        ${data.insights.map(insight => `<li>${escapeHtml(insight)}</li>`).join('')}
+                        ${insights.map(insight => `<li>${escapeHtml(insight)}</li>`).join('')}
                     </ul>
                 </div>
+                ` : ''}
+
                 
                 <!-- Execution Plan -->
                 <div class="execution-plan">
@@ -157,22 +211,26 @@ function displayComplexResult(data) {
     `;
     
     data.sub_queries.forEach((sq, index) => {
+        const sqVizAssessment = sq.visualization_assessment || {};
+        const sqShouldVisualize = sqVizAssessment.should_visualize || false;
+        const sqVizReason = sqVizAssessment.reasoning || sqVizAssessment.reason || sq.viz_reason || 'No reason provided';
+
         html += `
                     <div class="sub-query-card">
                         <h4>Sub-Query ${index + 1}: ${escapeHtml(sq.question)}</h4>
         `;
-        
+
         // Visualization for this sub-query
-        if (sq.should_visualize && sq.plot) {
+        if (sqShouldVisualize && sq.plot) {
             html += `
                         <div class="visualization-section">
-                            <p class="viz-reason"><em>${escapeHtml(sq.viz_reason)}</em></p>
+                            <p class="viz-reason"><em>${escapeHtml(sqVizReason)}</em></p>
                             <div id="plot-sub-${index}"></div>
                         </div>
             `;
-        } else if (!sq.should_visualize) {
+        } else if (!sqShouldVisualize) {
             html += `
-                        <p class="viz-reason">💡 <strong>No visualization:</strong> ${escapeHtml(sq.viz_reason)}</p>
+                        <p class="viz-reason">💡 <strong>No visualization:</strong> ${escapeHtml(sqVizReason)}</p>
             `;
         }
         
@@ -207,10 +265,13 @@ function displayComplexResult(data) {
     `;
     
     container.innerHTML = html;
-    
+
     // Render plots for sub-queries
     data.sub_queries.forEach((sq, index) => {
-        if (sq.should_visualize && sq.plot) {
+        const sqVizAssessment = sq.visualization_assessment || {};
+        const sqShouldVisualize = sqVizAssessment.should_visualize || false;
+
+        if (sqShouldVisualize && sq.plot) {
             Plotly.newPlot(`plot-sub-${index}`, sq.plot.data, sq.plot.layout, {responsive: true});
         }
     });

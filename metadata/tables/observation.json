@@ -1,6 +1,6 @@
 {
   "table": "observation",
-  "description": "ML training observations with churn labels. Contains historical snapshots of account status with churn indicators. Join with account table to calculate churn rates by demographics, country, or channel. Essential for all churn analysis queries.",
+  "description": "ML training observations with churn labels",
   "datasource": "churn_db",
   "columns": [
     {
@@ -17,7 +17,7 @@
     },
     {
       "name": "is_churn",
-      "description": "Churn indicator flag (1=churned, 0=active). Use COUNT(CASE WHEN is_churn = 1 THEN 1 END) to count churned accounts. Essential for calculating churn rates.",
+      "description": "Whether account churned (boolean)",
       "type": "BOOLEAN",
       "examples": []
     }

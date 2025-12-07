@@ -1,6 +1,0 @@
-{
-  "datasource": "churn_db",
-  "question": "What is the event activity by type?",
-  "query": "SELECT et.event_type_name, COUNT(*) as event_count FROM event e JOIN event_type et ON e.event_type_id = et.event_type_id GROUP BY et.event_type_name ORDER BY event_count DESC",
-  "reasoning": "Counts events grouped by event type using the event_type lookup table."
-}

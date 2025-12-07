@@ -1,0 +1,26 @@
+{
+  "datasource": "churn_db",
+  "main_table": "subscription",
+  "queries": [
+    {
+      "question": "Show me subscription starts by month",
+      "query": "SELECT strftime('%Y-%m', start_date) as month, COUNT(*) as new_subscriptions FROM subscription GROUP BY month ORDER BY month",
+      "reasoning": "Groups subscriptions by start month to show growth over time."
+    },
+    {
+      "question": "How many total subscriptions do we have?",
+      "query": "SELECT COUNT(*) as total_subscriptions FROM subscription",
+      "reasoning": "Simple count of all subscriptions in the database."
+    },
+    {
+      "question": "How many active subscriptions do we have?",
+      "query": "SELECT COUNT(*) as active_subscriptions FROM subscription WHERE end_date IS NULL",
+      "reasoning": "Counts subscriptions without an end_date, indicating they are still active."
+    },
+    {
+      "question": "What products do we offer and how many subscriptions for each?",
+      "query": "SELECT product, COUNT(*) as subscription_count FROM subscription GROUP BY product ORDER BY subscription_count DESC",
+      "reasoning": "Groups all subscriptions by product type to show product popularity."
+    }
+  ]
+}

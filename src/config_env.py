@@ -21,10 +21,11 @@ class Config:
     AZURE_OPENAI_EMBEDDING_DEPLOYMENT = os.getenv('AZURE_OPENAI_EMBEDDING_DEPLOYMENT', 'text-embedding-ada-002')
     
     # Database Configuration
-    DATABASE_PATH = os.getenv('DATABASE_PATH', 'data/churn.db')
+    BASE_DIR = Path(__file__).parent.parent
+    DATABASE_PATH = os.getenv('DATABASE_PATH', str(BASE_DIR / 'data' / 'churn.db'))
     
     # ChromaDB Configuration
-    CHROMADB_PATH = os.getenv('CHROMADB_PATH', 'data/chromadb')
+    CHROMADB_PATH = os.getenv('CHROMADB_PATH', str(BASE_DIR / 'data' / 'chromadb'))
     CHROMADB_COLLECTION_TABLES = os.getenv('CHROMADB_COLLECTION_TABLES', 'nl2sql_tables')
     CHROMADB_COLLECTION_QUERIES = os.getenv('CHROMADB_COLLECTION_QUERIES', 'nl2sql_queries')
     
@@ -32,7 +33,14 @@ class Config:
     APP_HOST = os.getenv('APP_HOST', '0.0.0.0')
     APP_PORT = int(os.getenv('APP_PORT', '8000'))
     LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
-    
+
+    # RAG Configuration
+    RAG_TOP_K_TABLES = int(os.getenv('RAG_TOP_K_TABLES', '5'))
+    RAG_TOP_K_QUERIES = int(os.getenv('RAG_TOP_K_QUERIES', '5'))
+
+    # Result Synthesis Configuration
+    SYNTHESIS_MAX_ROWS = int(os.getenv('SYNTHESIS_MAX_ROWS', '50'))
+
     @classmethod
     def validate(cls):
         """Validate that required environment variables are set"""

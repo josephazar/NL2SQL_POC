@@ -1,0 +1,36 @@
+{
+  "datasource": "churn_db",
+  "main_table": "subscription",
+  "queries": [
+    {
+      "question": "What is our current churn rate?",
+      "query": "SELECT ROUND(CAST(SUM(CASE WHEN end_date IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / COUNT(*) * 100, 2) as churn_rate_percent FROM subscription",
+      "reasoning": "Calculates the percentage of churned subscriptions out of total subscriptions by counting subscriptions with end_date set."
+    },
+    {
+      "question": "What is the churn rate by country?",
+      "query": "SELECT a.country, COUNT(CASE WHEN o.is_churn = 1 THEN 1 END) AS churned_accounts, COUNT(o.account_id) AS total_observations, ROUND(COUNT(CASE WHEN o.is_churn = 1 THEN 1 END) * 100.0 / COUNT(o.account_id), 2) AS churn_rate FROM account a JOIN observation o ON a.id = o.account_id GROUP BY a.country ORDER BY churn_rate DESC LIMIT 100",
+      "reasoning": "To calculate churn rate by country, join the account table (which has country information) with the observation table (which has is_churn flag). Count churned accounts where is_churn=1 and divide by total observations per country."
+    },
+    {
+      "question": "What is the churn rate by product?",
+      "query": "SELECT s.product, COUNT(CASE WHEN o.is_churn = 1 THEN 1 END) AS churned_accounts, COUNT(o.account_id) AS total_observations, ROUND(COUNT(CASE WHEN o.is_churn = 1 THEN 1 END) * 100.0 / COUNT(o.account_id), 2) AS churn_rate FROM subscription s JOIN observation o ON s.account_id = o.account_id GROUP BY s.product ORDER BY churn_rate DESC LIMIT 100",
+      "reasoning": "To calculate churn rate by product, join the subscription table (which has product information) with the observation table (which has is_churn flag). Count churned accounts where is_churn=1 and divide by total observations per product."
+    },
+    {
+      "question": "What is the churn rate by acquisition channel?",
+      "query": "SELECT a.channel, ROUND(CAST(SUM(CASE WHEN s.end_date IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / COUNT(*) * 100, 2) as churn_rate FROM account a JOIN subscription s ON a.id = s.account_id GROUP BY a.channel ORDER BY churn_rate DESC",
+      "reasoning": "Calculates churn rate for each acquisition channel by joining accounts and subscriptions."
+    },
+    {
+      "question": "Show me churns by month",
+      "query": "SELECT strftime('%Y-%m', end_date) as month, COUNT(*) as churns FROM subscription WHERE end_date IS NOT NULL GROUP BY month ORDER BY month",
+      "reasoning": "Groups churned subscriptions by end month to show churn trends over time."
+    },
+    {
+      "question": "How many churn observations do we have?",
+      "query": "SELECT is_churn, COUNT(*) as observation_count FROM observation GROUP BY is_churn",
+      "reasoning": "Counts ML training observations grouped by churn status."
+    }
+  ]
+}

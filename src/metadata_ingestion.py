@@ -71,35 +71,63 @@ class MetadataIngestion:
         return count
     
     def load_query_metadata(self) -> int:
-        """Load all query metadata JSON files into ChromaDB"""
+        """
+        Load all query metadata JSON files into ChromaDB.
+        Supports both old and new schema:
+        - Old: {datasource, question, query, reasoning}
+        - New: {datasource, queries: [{question, query, reasoning}, ...]}
+        """
         queries_dir = config.METADATA_DIR / "queries"
         count = 0
-        
+
         print(f"Loading query metadata from {queries_dir}...")
-        
+
         for json_file in queries_dir.glob("*.json"):
             with open(json_file, 'r') as f:
-                query_data = json.load(f)
-            
-            # Create document text for embedding (use the question)
-            doc_text = query_data["question"]
-            
-            # Add to ChromaDB
-            self.queries_collection.add(
-                documents=[doc_text],
-                metadatas=[{
-                    "datasource": query_data["datasource"],
-                    "question": query_data["question"],
-                    "query": query_data["query"],
-                    "reasoning": query_data.get("reasoning", ""),
-                    "type": "query"
-                }],
-                ids=[f"query_{json_file.stem}"]
-            )
-            
-            count += 1
-            print(f"  ✓ Loaded query: {json_file.stem}")
-        
+                file_data = json.load(f)
+
+            datasource = file_data.get("datasource", "unknown")
+            main_table = file_data.get("main_table", "unknown")  # Get main table
+
+            # Determine schema: new (with "queries" array) or old (single query)
+            if "queries" in file_data:
+                # New schema: multiple queries per file
+                queries_list = file_data["queries"]
+            else:
+                # Old schema: single query per file (backward compatibility)
+                queries_list = [{
+                    "question": file_data["question"],
+                    "query": file_data["query"],
+                    "reasoning": file_data.get("reasoning", "")
+                }]
+
+            # Add each query to ChromaDB
+            for idx, query_data in enumerate(queries_list):
+                doc_text = query_data["question"]
+
+                # Create unique ID for each query
+                if len(queries_list) == 1:
+                    query_id = f"query_{json_file.stem}"
+                else:
+                    query_id = f"query_{json_file.stem}_{idx}"
+
+                self.queries_collection.add(
+                    documents=[doc_text],
+                    metadatas=[{
+                        "datasource": datasource,
+                        "main_table": main_table,  # Store main table
+                        "question": query_data["question"],
+                        "query": query_data["query"],
+                        "reasoning": query_data.get("reasoning", ""),
+                        "type": "query"
+                    }],
+                    ids=[query_id]
+                )
+
+                count += 1
+
+            print(f"  ✓ Loaded {len(queries_list)} query(s) from: {json_file.stem}")
+
         return count
     
     def _create_table_document(self, table_data: Dict) -> str:
@@ -136,24 +164,77 @@ class MetadataIngestion:
         
         return tables
     
-    def search_queries(self, query: str, n_results: int = 5) -> List[Dict]:
-        """Search for similar example queries based on natural language query"""
-        results = self.queries_collection.query(
-            query_texts=[query],
-            n_results=n_results
-        )
-        
+    def search_queries(self, query: str, n_results: int = 5, datasource: str = None, main_table: str = None) -> List[Dict]:
+        """
+        Search for similar example queries based on natural language query.
+
+        Args:
+            query: Natural language query for semantic search
+            n_results: Number of results to return
+            datasource: Optional filter by datasource (e.g., "churn_db")
+            main_table: Optional filter by main table (e.g., "subscription")
+
+        Returns:
+            List of similar query examples
+        """
+        # Build where filter for ChromaDB
+        where_filter = {}
+        if datasource:
+            where_filter["datasource"] = datasource
+        if main_table:
+            where_filter["main_table"] = main_table
+
+        # Query with or without filters
+        query_params = {
+            "query_texts": [query],
+            "n_results": n_results
+        }
+        if where_filter:
+            query_params["where"] = where_filter
+
+        results = self.queries_collection.query(**query_params)
+
         queries = []
         if results['metadatas'] and len(results['metadatas']) > 0:
             for metadata in results['metadatas'][0]:
                 queries.append({
                     "question": metadata["question"],
                     "query": metadata["query"],
-                    "reasoning": metadata.get("reasoning", "")
+                    "reasoning": metadata.get("reasoning", ""),
+                    "main_table": metadata.get("main_table", "unknown")
                 })
-        
+
         return queries
-    
+
+    def get_queries_by_table(self, table_name: str, n_results: int = 10) -> List[Dict]:
+        """
+        Get all example queries for a specific table.
+
+        Args:
+            table_name: Table name to filter by
+            n_results: Maximum number of results
+
+        Returns:
+            List of queries for the specified table
+        """
+        results = self.queries_collection.get(
+            where={"main_table": table_name},
+            limit=n_results,
+            include=['metadatas']
+        )
+
+        queries = []
+        if results['metadatas']:
+            for metadata in results['metadatas']:
+                queries.append({
+                    "question": metadata["question"],
+                    "query": metadata["query"],
+                    "reasoning": metadata.get("reasoning", ""),
+                    "main_table": metadata.get("main_table", "unknown")
+                })
+
+        return queries
+
     def reset_collections(self):
         """Reset (delete and recreate) all collections"""
         print("Resetting ChromaDB collections...")

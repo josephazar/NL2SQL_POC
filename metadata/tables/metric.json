@@ -1,6 +1,6 @@
 {
   "table": "metric",
-  "description": "Calculated customer metrics over time (engagement scores, usage metrics, health scores). Time-series data for tracking customer behavior trends. Join with metric_name for metric definitions and account for customer context.",
+  "description": "Calculated customer metrics over time",
   "datasource": "churn_db",
   "columns": [
     {

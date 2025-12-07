@@ -4,7 +4,7 @@
 import json
 import os
 
-METADATA_DIR = '/home/ubuntu/nl2sql_churn_poc/metadata'
+METADATA_DIR = 'metadata'
 
 # Table metadata
 TABLES = {
@@ -197,7 +197,7 @@ def save_datasources():
             {
                 'name': 'churn_db',
                 'type': 'sqlite',
-                'connection_string': '/home/ubuntu/nl2sql_churn_poc/data/churn.db',
+                'connection_string': 'data/churn.db',
                 'description': 'Customer churn database with complete churnsim schema (9 tables)',
                 'tables': list(TABLES.keys())
             }

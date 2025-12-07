@@ -1,0 +1,26 @@
+{
+  "datasource": "churn_db",
+  "main_table": "event",
+  "queries": [
+    {
+      "question": "What is the event activity by type?",
+      "query": "SELECT et.event_type_name, COUNT(*) as event_count FROM event e JOIN event_type et ON e.event_type_id = et.event_type_id GROUP BY et.event_type_name ORDER BY event_count DESC",
+      "reasoning": "Counts events grouped by event type using the event_type lookup table."
+    },
+    {
+      "question": "What are the average metric values by metric type?",
+      "query": "SELECT mn.metric_name, ROUND(AVG(m.metric_value), 2) as avg_value, COUNT(*) as measurement_count FROM metric m JOIN metric_name mn ON m.metric_name_id = mn.metric_name_id GROUP BY mn.metric_name ORDER BY avg_value DESC",
+      "reasoning": "Calculates average values for each metric type using metric and metric_name tables."
+    },
+    {
+      "question": "Which accounts have the highest event activity?",
+      "query": "SELECT account_id, COUNT(*) as event_count FROM event GROUP BY account_id ORDER BY event_count DESC LIMIT 10",
+      "reasoning": "Identifies the most active accounts based on number of events tracked."
+    },
+    {
+      "question": "What metrics do we track?",
+      "query": "SELECT metric_name_id, metric_name, COUNT(*) as usage_count FROM metric_name mn LEFT JOIN metric m ON mn.metric_name_id = m.metric_name_id GROUP BY mn.metric_name_id, mn.metric_name ORDER BY usage_count DESC",
+      "reasoning": "Lists all available metric types and how frequently each is used."
+    }
+  ]
+}

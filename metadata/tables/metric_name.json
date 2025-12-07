@@ -1,6 +1,6 @@
 {
   "table": "metric_name",
-  "description": "Lookup table for metric definitions. Maps metric_name_id to human-readable metric names and descriptions. Essential for interpreting metric data.",
+  "description": "Lookup table for metric names",
   "datasource": "churn_db",
   "columns": [
     {

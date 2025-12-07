@@ -1,6 +1,6 @@
 # Environment variables
 .env
-
+.claude
 # Python
 __pycache__/
 *.py[cod]
@@ -44,7 +44,7 @@ env/
 *.log
 logs/
 webapp.log
-
+notes.txt
 # Database (optional - uncomment if you don't want to commit the database)
 # data/churn.db
 # data/chromadb/
@@ -76,3 +76,10 @@ Thumbs.db
 screenshots/
 *.tmp
 *.temp
+
+AGENTIC_RETRY_PATTERNS.md
+ARCHITECTURE.md
+DATA_FLOW_AND_TOKENS.md
+SYNTHESIS_EXPLAINED.md
+
+metadata_old

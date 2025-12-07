@@ -1,6 +1,6 @@
 {
   "table": "account",
-  "description": "Customer account information including demographics, country, and acquisition channel. Use this table to analyze customer distribution by country, age demographics, and acquisition channels. Essential for geographic analysis and churn rate calculations by country.",
+  "description": "Customer account information including demographics and acquisition channel",
   "datasource": "churn_db",
   "columns": [
     {
@@ -27,7 +27,7 @@
     },
     {
       "name": "country",
-      "description": "Customer country (geographic location). Use for geographic segmentation, churn rate by country, revenue by region, and customer distribution analysis.",
+      "description": "Customer country",
       "type": "TEXT",
       "examples": [
         "USA",

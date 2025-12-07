@@ -1,6 +1,6 @@
 {
   "table": "active_period",
-  "description": "Continuous activity periods for accounts. Tracks start and end dates of active usage periods. Use for retention analysis, activity gaps, and customer lifecycle tracking.",
+  "description": "Monthly active periods for accounts",
   "datasource": "churn_db",
   "columns": [
     {

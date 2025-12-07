@@ -1,6 +1,6 @@
 {
   "table": "active_week",
-  "description": "Weekly activity tracking for accounts. Aggregates account activity by week. Use for weekly active users (WAU), engagement trends, and time-series activity analysis.",
+  "description": "Weekly activity tracking for accounts",
   "datasource": "churn_db",
   "columns": [
     {

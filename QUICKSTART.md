@@ -1,133 +1,204 @@
-# Quick Start Guide - NL2SQL Churn POC
+# Quick Start Guide - NL2SQL with Semantic Kernel
 
 ## 🚀 5-Minute Setup
 
-### 1. Start the Application
+### 1. Configure Environment
+
+Create `.env` file in project root:
 
 ```bash
-cd /home/ubuntu/nl2sql_churn_poc/webapp
-source ../venv/bin/activate
-python app.py
+cp .env.example .env
 ```
 
-The server will start on `http://0.0.0.0:8000`
+Edit `.env` with your Azure OpenAI credentials:
+```bash
+AZURE_OPENAI_ENDPOINT=https://your-endpoint.openai.azure.com
+AZURE_OPENAI_API_KEY=your-api-key-here
+AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o-mini
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-ada-002
+```
 
-### 2. Access the Web Interface
+### 2. Install Dependencies
 
-Open your browser to:
-- **Local:** http://localhost:8000
-- **Public URL:** https://8000-iiobg734ojo79m1l1mgnq-225270a7.manusvm.computer
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-### 3. Try Example Questions
+### 3. Initialize Database and Metadata
 
-Click on any of the example buttons or type your own questions:
+```bash
+# Generate sample churn database
+python src/generate_churn_data.py
 
-#### Simple Questions
+# Ingest metadata into ChromaDB
+python src/metadata_ingestion.py
+```
+
+### 4. Start the Application
+
+```bash
+cd webapp
+uvicorn app:app --host 0.0.0.0 --port 8000
+```
+
+The server will start on `http://localhost:8000`
+
+## 📊 Try Example Questions
+
+Open your browser to http://localhost:8000 and try:
+
+### Simple Queries
 - "How many customers do we have?"
-- "What is our total revenue?"
+- "What is our total MRR?"
+- "How many active subscriptions do we have?"
 
-#### Churn Analysis
+### Churn Analysis
 - "What is our churn rate?"
-- "Show me customers who churned recently"
+- "Show me churn rate by country"
+- "What is the churn rate by product?"
 
-#### Customer Insights
-- "Who are our top 10 most engaged customers?"
-- "Show me the top customers by revenue"
+### Revenue Analysis
+- "Show me total MRR by product"
+- "Who are the top 10 customers by MRR?"
+- "Show me MRR trends over time"
 
-#### Geographic Analysis
-- "How many customers do we have in each country?"
+### Time-Series
+- "Show me subscriptions over time"
+- "Show me churns by month"
 
-### 4. Understanding the Results
+## 🎯 Understanding the Results
 
 Each query returns:
-1. **Generated SQL** - The SQL query created from your question
-2. **Reasoning** - Explanation of the query logic
-3. **Data Results** - Formatted table with query results
-4. **Metadata** - Relevant tables and example queries used
 
-## 📊 What's in the Database?
+1. **Type**: `simple` (single query) or `complex` (map-reduce)
+2. **SQL**: Generated SQL query with syntax highlighting
+3. **Results**: Data in formatted table
+4. **Visualization**: Auto-generated charts (when appropriate)
+5. **Summary**: Natural language answer
+6. **Key Insights**: AI-generated insights from the data
 
-- **5,000 customers** across 6 countries
-- **6,000 subscriptions** (4,492 active, 1,508 churned)
-- **50,000 customer events** (logins, feature usage, etc.)
-- **4 subscription plans** (Basic, Standard, Premium, Enterprise)
+## 📁 What's in the Database?
 
-## 🔧 Testing the CLI
+- **5,000 accounts** across 6 countries
+- **6,000+ subscriptions** (Basic, Standard, Premium, Enterprise)
+- **50,000+ events** (login, feature usage, support tickets)
+- **300,000+ metrics** (usage statistics, engagement scores)
 
-Want to test without the web interface?
+## ⚙️ Configuration Options
+
+Edit `.env` to customize:
 
 ```bash
-cd /home/ubuntu/nl2sql_churn_poc/src
-source ../venv/bin/activate
-python nl2sql_agent.py
+# RAG Configuration
+RAG_TOP_K_TABLES=5          # Number of similar tables to retrieve
+RAG_TOP_K_QUERIES=5         # Number of example queries to retrieve
+
+# Result Synthesis
+SYNTHESIS_MAX_ROWS=50       # Max rows to send to LLM for synthesis
 ```
 
-This will run automated tests with predefined questions.
+## 🔧 Advanced Usage
 
-## 📝 Customization
+### Add Custom Query Examples
 
-### Add Your Own Example Queries
-
-1. Create a new JSON file in `metadata/queries/`:
+1. Create/edit JSON file in `metadata/queries/`:
 
 ```json
 {
   "datasource": "churn_db",
-  "question": "Your question here?",
-  "query": "SELECT ... FROM ...",
-  "reasoning": "Explanation of the query"
+  "main_table": "subscription",
+  "queries": [
+    {
+      "question": "Your question here?",
+      "query": "SELECT ... FROM ...",
+      "reasoning": "Explanation of the query"
+    }
+  ]
 }
 ```
 
 2. Re-run metadata ingestion:
 
 ```bash
-cd src
-python metadata_ingestion.py
+python src/metadata_ingestion.py
 ```
 
-### Modify Database Schema
+### Filter Queries by Table
 
-1. Edit table metadata in `metadata/tables/*.json`
-2. Re-run metadata ingestion
-3. Restart the web application
+```python
+from metadata_ingestion import MetadataIngestion
+
+meta = MetadataIngestion()
+
+# Get all queries for subscription table
+queries = meta.get_queries_by_table('subscription')
+
+# Search with table filter
+queries = meta.search_queries('churn rate', main_table='subscription')
+```
 
 ## 🐛 Troubleshooting
 
 ### Server won't start
-- Check if port 8000 is already in use: `netstat -tuln | grep 8000`
-- Kill existing process: `pkill -f "python app.py"`
+```bash
+# Check if port 8000 is in use
+lsof -ti:8000
+
+# Kill existing process
+lsof -ti:8000 | xargs kill -9
+```
 
 ### ChromaDB errors
-- Delete and recreate: `rm -rf data/chromadb`
-- Re-run: `python src/metadata_ingestion.py`
+```bash
+# Reset ChromaDB
+rm -rf data/chromadb
+python src/metadata_ingestion.py
+```
 
-### SQL generation errors
-- Check Azure OpenAI credentials in `src/config.py`
-- Verify API key is valid and has quota
+### Azure OpenAI errors
+- Verify credentials in `.env`
+- Check API key has quota
+- Confirm deployment names match your Azure setup
 
-## 📚 Next Steps
+## 🏗️ Architecture Overview
 
-1. **Explore the code** - Check out `src/nl2sql_agent.py` for the main logic
-2. **Add more data** - Modify `generate_churn_data.py` to create more records
-3. **Customize the UI** - Edit `webapp/templates/index.html` and `webapp/static/style.css`
-4. **Add new features** - Extend the FastAPI endpoints in `webapp/app.py`
+```
+User Question
+    ↓
+Query Planner (LLM) → Simple or Complex?
+    ↓
+┌─────────────────┬──────────────────┐
+│   Simple Path   │   Complex Path    │
+│                 │   (Map-Reduce)    │
+│  1. RAG Search  │  1. Decompose     │
+│  2. SQL Gen     │  2. Parallel Exec │
+│  3. Execute     │  3. Synthesize    │
+│  4. Visualize   │  4. Visualize     │
+│  5. Synthesize  │                   │
+└─────────────────┴──────────────────┘
+         ↓
+    Results + Insights
+```
 
 ## 💡 Pro Tips
 
-1. **Use specific questions** - The more specific your question, the better the SQL
-2. **Check the reasoning** - Understand why the AI generated that particular query
-3. **Review the metadata** - See which tables and examples influenced the result
-4. **Iterate on questions** - Refine your question if the first result isn't perfect
+1. **Specific questions work best** - "Show me churn rate by country" > "Tell me about churn"
+2. **Use the schema tab** - Understand available tables and columns
+3. **Check synthesis** - AI provides insights beyond raw data
+4. **Adjust RAG settings** - More examples = better SQL but higher token cost
+5. **Add domain examples** - Custom queries improve accuracy for your use case
 
-## 🎯 Example Workflow
+## 📚 Key Features
 
-1. **Start with simple questions** to understand the system
-2. **Review the generated SQL** to learn SQL patterns
-3. **Try complex questions** combining multiple tables
-4. **Use the schema browser** to understand available data
-5. **Add your own examples** to improve accuracy for specific use cases
+✅ **Semantic Kernel** - LLM orchestration framework
+✅ **RAG (ChromaDB)** - Retrieves relevant tables & query examples
+✅ **Map-Reduce** - Handles complex multi-part questions
+✅ **Self-Correction** - Retry pattern with error feedback
+✅ **Auto-Visualization** - Data-driven chart generation
+✅ **Result Synthesis** - Natural language summaries + insights
 
 ---
 
-**Ready to explore? Start asking questions!** 🚀
+**Ready to ask questions?** Open http://localhost:8000 and start exploring! 🚀

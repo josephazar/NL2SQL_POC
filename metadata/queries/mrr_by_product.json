@@ -1,6 +1,0 @@
-{
-  "datasource": "churn_db",
-  "question": "What is the total MRR by product?",
-  "query": "SELECT product, ROUND(SUM(mrr), 2) as total_mrr FROM subscription WHERE end_date IS NULL GROUP BY product ORDER BY total_mrr DESC",
-  "reasoning": "Sums monthly recurring revenue for active subscriptions grouped by product."
-}

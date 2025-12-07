@@ -3,7 +3,7 @@
     {
       "name": "churn_db",
       "type": "sqlite",
-      "connection_string": "/home/ubuntu/nl2sql_churn_poc/data/churn.db",
+      "connection_string": "data/churn.db",
       "description": "Customer churn database with complete churnsim schema (9 tables)",
       "tables": [
         "account",

@@ -1,6 +1,0 @@
-{
-  "datasource": "churn_db",
-  "question": "Show me subscription starts by month",
-  "query": "SELECT strftime('%Y-%m', start_date) as month, COUNT(*) as new_subscriptions FROM subscription GROUP BY month ORDER BY month",
-  "reasoning": "Groups subscriptions by start month to show growth over time."
-}

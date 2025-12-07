@@ -1,6 +1,6 @@
 {
   "table": "event",
-  "description": "Customer behavioral events and interactions (logins, feature usage, support tickets, etc.). Use for engagement analysis, feature adoption, user activity patterns, and behavioral churn indicators. Join with event_type for event names and account for customer context.",
+  "description": "Customer behavioral events and interactions",
   "datasource": "churn_db",
   "columns": [
     {

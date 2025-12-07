@@ -1,0 +1,16 @@
+{
+  "datasource": "churn_db",
+  "main_table": "account",
+  "queries": [
+    {
+      "question": "How many accounts do we have in each country?",
+      "query": "SELECT country, COUNT(*) as account_count FROM account GROUP BY country ORDER BY account_count DESC",
+      "reasoning": "Groups accounts by country and counts them."
+    },
+    {
+      "question": "Who are the top 10 customers by MRR?",
+      "query": "SELECT a.id, a.country, ROUND(SUM(s.mrr), 2) as total_mrr FROM account a JOIN subscription s ON a.id = s.account_id WHERE s.end_date IS NULL GROUP BY a.id, a.country ORDER BY total_mrr DESC LIMIT 10",
+      "reasoning": "Joins accounts with active subscriptions and ranks by total MRR."
+    }
+  ]
+}

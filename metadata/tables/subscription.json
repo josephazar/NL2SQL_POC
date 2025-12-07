@@ -1,6 +1,6 @@
 {
   "table": "subscription",
-  "description": "Customer subscription details including product, pricing, start/end dates, and MRR. Use this table for revenue analysis, product performance, subscription lifecycle, and active vs churned subscription counts. Join with account for customer demographics or observation for churn analysis.",
+  "description": "Customer subscription details including product, pricing, and churn status",
   "datasource": "churn_db",
   "columns": [
     {

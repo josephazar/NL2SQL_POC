@@ -52,50 +52,98 @@ class PlotGenerator:
         return has_aggregation or has_time or len(results) > 1
     
     def _has_time_column(self, results: List[Dict[str, Any]]) -> bool:
-        """Check if results have time-based columns"""
-        if not results:
+        """
+        Check if results have time-series data by analyzing actual values.
+        Works on any database schema without hardcoded keywords.
+        """
+        if not results or len(results) == 0:
             return False
-        
-        time_keywords = ['date', 'time', 'month', 'year', 'day', 'week', 'period']
-        columns = results[0].keys()
-        
-        return any(
-            any(keyword in col.lower() for keyword in time_keywords)
-            for col in columns
-        )
+
+        # Convert to DataFrame for easier analysis
+        df = pd.DataFrame(results)
+
+        # Check each column for temporal patterns
+        for col in df.columns:
+            if self._is_temporal_column(df[col]):
+                return True
+
+        return False
+
+    def _is_temporal_column(self, series: pd.Series) -> bool:
+        """
+        Detect if a pandas Series contains temporal data by analyzing patterns.
+        Returns True if the column appears to be temporal (dates, timestamps, periods).
+        """
+        # Skip numeric-only columns (likely not temporal)
+        if pd.api.types.is_numeric_dtype(series):
+            return False
+
+        # Try to parse as datetime
+        try:
+            # Sample first few non-null values
+            sample = series.dropna().head(10)
+            if len(sample) == 0:
+                return False
+
+            # Attempt to parse as datetime
+            parsed = pd.to_datetime(sample, errors='coerce')
+
+            # If >80% of samples parsed successfully, it's likely temporal
+            success_rate = parsed.notna().sum() / len(sample)
+            if success_rate > 0.8:
+                return True
+
+            # Check for common date patterns (YYYY-MM, YYYY-MM-DD, etc.)
+            # This catches formatted strings that to_datetime might miss
+            str_values = sample.astype(str)
+            date_pattern = r'^\d{4}[-/]\d{1,2}(?:[-/]\d{1,2})?$|^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}$'
+            matches = str_values.str.match(date_pattern)
+            if matches.sum() / len(sample) > 0.8:
+                return True
+
+        except (ValueError, TypeError):
+            pass
+
+        return False
     
     def _detect_chart_type(self, df: pd.DataFrame, query: str) -> str:
         """
-        Detect appropriate chart type based on data characteristics
-        
+        Detect appropriate chart type based on data characteristics.
+        Uses data-driven analysis instead of hardcoded keywords.
+
         Returns:
             Chart type: 'bar', 'line', 'pie', 'scatter', 'heatmap'
         """
         if len(df) == 0:
             return 'bar'
-        
-        # Check for time series
-        time_columns = [col for col in df.columns 
-                       if any(keyword in col.lower() 
-                             for keyword in ['date', 'time', 'month', 'year', 'week'])]
-        
-        if time_columns and len(df) > 2:
+
+        # Detect temporal columns by analyzing data patterns
+        temporal_cols = [col for col in df.columns if self._is_temporal_column(df[col])]
+
+        # If we have temporal data with enough points, use line chart
+        if temporal_cols and len(df) > 2:
             return 'line'
-        
-        # Check for percentage/rate columns (good for pie charts)
-        rate_columns = [col for col in df.columns
-                       if any(keyword in col.lower()
-                             for keyword in ['rate', 'percent', 'ratio', 'share'])]
-        
-        if rate_columns and len(df) <= 10:
-            return 'pie'
-        
-        # Check for categorical data with counts
+
+        # Detect percentage/ratio data by analyzing numeric values
+        numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
+
+        # Check if numeric values are percentages (0-100 or 0-1 range)
+        for col in numeric_cols:
+            values = df[col].dropna()
+            if len(values) > 0:
+                min_val, max_val = values.min(), values.max()
+                # If values are in 0-1 or 0-100 range and we have few categories, use pie chart
+                if ((0 <= min_val <= 1 and 0 <= max_val <= 1) or
+                    (0 <= min_val <= 100 and 0 <= max_val <= 100)) and len(df) <= 10:
+                    return 'pie'
+
+        # Check for categorical + numeric pattern (good for bar charts)
         if len(df.columns) == 2 and len(df) <= 20:
             numeric_cols = df.select_dtypes(include=['number']).columns
-            if len(numeric_cols) == 1:
+            categorical_cols = df.select_dtypes(exclude=['number']).columns
+            if len(numeric_cols) == 1 and len(categorical_cols) == 1:
                 return 'bar'
-        
+
         # Default to bar chart
         return 'bar'
     
@@ -167,8 +215,8 @@ class PlotGenerator:
         # Create HORIZONTAL bar chart (x=values, y=categories)
         fig = go.Figure(data=[
             go.Bar(
-                x=df_sorted[value_col],  # Values on X-axis
-                y=df_sorted[category_col],  # Categories on Y-axis
+                x=df_sorted[value_col].tolist(),  # Convert to list to avoid numpy serialization
+                y=df_sorted[category_col].tolist(),  # Convert to list to avoid numpy serialization
                 orientation='h',  # Horizontal orientation
                 marker_color=self.color_palette[0],
                 text=text_labels,
@@ -186,37 +234,38 @@ class PlotGenerator:
         return fig
     
     def _create_line_chart(self, df: pd.DataFrame, query: str) -> go.Figure:
-        """Create line chart for time series"""
-        # Find time column
-        time_cols = [col for col in df.columns 
-                    if any(keyword in col.lower() 
-                          for keyword in ['date', 'time', 'month', 'year', 'week'])]
-        
-        if not time_cols:
+        """
+        Create line chart for time series.
+        Uses data-driven temporal detection instead of hardcoded keywords.
+        """
+        # Detect temporal columns by analyzing data patterns
+        temporal_cols = [col for col in df.columns if self._is_temporal_column(df[col])]
+
+        if not temporal_cols:
             return self._create_bar_chart(df, query)
-        
-        x_col = time_cols[0]
+
+        x_col = temporal_cols[0]
         numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
-        
+
         fig = go.Figure()
-        
+
         # Add line for each numeric column
         for i, y_col in enumerate(numeric_cols):
             fig.add_trace(go.Scatter(
-                x=df[x_col],
-                y=df[y_col],
+                x=df[x_col].tolist(),  # Convert to list to avoid numpy serialization
+                y=df[y_col].tolist(),  # Convert to list to avoid numpy serialization
                 mode='lines+markers',
                 name=y_col.replace('_', ' ').title(),
                 line=dict(color=self.color_palette[i % len(self.color_palette)], width=3),
                 marker=dict(size=8)
             ))
-        
+
         fig.update_layout(
             xaxis_title=x_col.replace('_', ' ').title(),
             yaxis_title='Value',
             hovermode='x unified'
         )
-        
+
         return fig
     
     def _create_pie_chart(self, df: pd.DataFrame, query: str) -> go.Figure:
@@ -230,8 +279,8 @@ class PlotGenerator:
         
         fig = go.Figure(data=[
             go.Pie(
-                labels=df[labels_col],
-                values=df[values_col],
+                labels=df[labels_col].tolist(),  # Convert to list to avoid numpy serialization
+                values=df[values_col].tolist(),  # Convert to list to avoid numpy serialization
                 marker=dict(colors=self.color_palette),
                 textinfo='label+percent',
                 textposition='auto',
@@ -253,8 +302,8 @@ class PlotGenerator:
         
         fig = go.Figure(data=[
             go.Scatter(
-                x=df[x_col],
-                y=df[y_col],
+                x=df[x_col].tolist(),  # Convert to list to avoid numpy serialization
+                y=df[y_col].tolist(),  # Convert to list to avoid numpy serialization
                 mode='markers',
                 marker=dict(
                     size=10,
